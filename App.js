@@ -9,13 +9,65 @@ import {
   ImageBackground,
 } from "react-native";
 import Welcome from "./components/Welcome";
+import { useState, useEffect } from "react";
 
 const API_URL = "https://api.openweathermap.org/data/2.5/";
 const API_KEY = "804b983f241df45091b96987b50a53c6";
 const city = "Люберцы";
-const full_url = `${API_URL}weather?units=metric&q=${city}&appid=${API_KEY}&lang=ru`;
+const full_url = `${API_URL}weather?units=metric&q=${city}&appid=${API_KEY}&lang=en`;
+
+const getData = async (url) => {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`HTTP error: ${response.status}`);
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Ошибка при получении погоды:", error);
+    throw error;
+  }
+};
+
+const getDate = () => {
+  const now = new Date();
+
+  const month = now.getMonth();
+
+  const months = [
+    "Jan",
+    "Feb",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "Aau",
+    "Sept",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+
+  const day = now.getDay();
+
+  return `${months[month]} ${day}`;
+};
 
 export default function App() {
+  const [weather_data, setWeatherData] = useState(null);
+
+  useEffect(() => {
+    getData(full_url)
+      .then((data) => setWeatherData(data))
+      .catch((error) => console.error(error));
+  }, []);
+
+  if (!weather_data) {
+    return null;
+  }
+
   return (
     <ImageBackground
       source={require("./assets/bg.jpg")}
@@ -40,6 +92,9 @@ export default function App() {
             borderTopColor: "#767676",
           }}
         >
+          <Text style={{ color: "white", fontSize: 24 }}>
+            {weather_data.name}
+          </Text>
           <Image
             source={{
               uri: "https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/f42aea83-260f-4562-aa22-0d1772104fe9",
@@ -64,7 +119,7 @@ export default function App() {
                 marginRight: 26,
               }}
             >
-              {"Sunday"}
+              {weather_data.weather[0].main}
             </Text>
             <Text
               style={{
@@ -72,7 +127,7 @@ export default function App() {
                 fontSize: 16,
               }}
             >
-              {"Nov 14"}
+              {getDate()}
             </Text>
           </View>
           <View
@@ -96,7 +151,7 @@ export default function App() {
                 marginRight: 7,
               }}
             >
-              {"24"}
+              {parseInt(weather_data.main.temp)}
             </Text>
             <Image
               source={{
@@ -117,7 +172,7 @@ export default function App() {
               marginBottom: 16,
             }}
           >
-            {"Heavy rain"}
+            {weather_data.weather[0].description}
           </Text>
           <View
             style={{
